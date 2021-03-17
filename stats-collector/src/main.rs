@@ -11,21 +11,18 @@ fn main() {
 }
 
 fn runner(){
-    let arr: [String; 5]= [String::from("-b"), String::from("-n"), String::from("1"), String::from(""), String::from("")];
-    // top -b -n 1 | grep Cpu -> returns best result.
-    let cpu_result: String = get_command_output("top", &arr);
-    println!("{}", cpu_result);
-    //let cpu_final = parse_cpu_stats(&cpu_result);
+    let cpu_result: String = get_program_output("../stats-collector/utils/cpu_runner.sh");
+    let cpu_final = parse_cpu_stats(&cpu_result);
+    
+    let ram_result: String = get_program_output("../stats-collector/utils/ram_runner.sh");
+    let ram_final = parse_ram_stats(&ram_result);
+    
+    // let temperature_final: String = get_program_output("../stats-collector/utils/temperature_runner.sh"); Uncomment before build to run on pi (command in temp bash script is not available for linux)
 
-    //let ram_result: String = get_command_output("free", String::from(""));
-
-    //let ram_final = parse_ram_stats(&ram_result);
-
-
-    //println!("{}", ram_final);
-    println!("----------------------------------------------------------------");
-    //println!("{}", cpu_final);
-    //println!("{}",get_current_time());
+    println!("{}", cpu_final);
+    println!("{}", ram_final);
+    // println!("{}", temperature_final); Uncomment before build to run on pi (command in temp bash script is not available for linux)
+    println!("{}",get_current_time());
 }
 
 fn get_current_time() -> String{
@@ -34,31 +31,24 @@ fn get_current_time() -> String{
     current_time
 }
 
-fn get_command_output(command: &str, args: &[String; 5]) -> String{
-    let output = Command::new(command)   //Execute command, pipes stdio to output
-        .args(args)
+fn get_program_output(program: &str) -> String{
+    let output = Command::new(program)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .output()
-        .expect("Failed to execute");
-    println!("{:?}", String::from_utf8_lossy(&output.stderr));
+        .expect("Program failed to execute.");
     let result = String::from_utf8_lossy(&output.stdout);   // Convert list of bytes to COW
-    // println!("{}", result);
     let str_result: String = result.to_string().clone();    // Clones result into a string
     str_result
 }
-
 
 fn parse_cpu_stats(result: &str) -> &str{
     let cpu = &result[..];
     cpu
 }
 
-// fn parse_gpu_stats(){
-
-// }
-
 fn parse_ram_stats(result: &str) -> &str{
-    let ram = &result[..204];
+    let ram = &result[..];
     ram
 }
+
