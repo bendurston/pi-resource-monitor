@@ -1,6 +1,8 @@
 use std::process::{Command, Stdio};
 use std::{thread, time};
 use chrono::{Local, DateTime};
+use reqwest::{blocking};
+use std::collections::HashMap;
 
 fn main() {
     // loops and calls runner then sleeps
@@ -10,28 +12,40 @@ fn main() {
     runner();
 }
 
-fn runner(){
+fn runner() {
     let cpu_result: String = get_program_output("../stats-collector/utils/cpu_runner.sh");
-    let cpu_final = parse_cpu_stats(&cpu_result);
     
     let ram_result: String = get_program_output("../stats-collector/utils/ram_runner.sh");
-    let ram_final = parse_ram_stats(&ram_result);
     
-    // let temperature_final: String = get_program_output("../stats-collector/utils/temperature_runner.sh"); Uncomment before build to run on pi (command in temp bash script is not available for linux)
+    let time_result: String = get_current_time();
+    // let temperature_result: String = get_program_output("../stats-collector/utils/temperature_runner.sh"); Uncomment before build to run on pi (command in temp bash script is not available for linux)
 
-    println!("{}", cpu_final);
-    println!("{}", ram_final);
-    // println!("{}", temperature_final); Uncomment before build to run on pi (command in temp bash script is not available for linux)
-    println!("{}",get_current_time());
+    send_information(cpu_result, ram_result, String::from("34.6"), time_result)
 }
 
-fn get_current_time() -> String{
+fn send_information(cpu: String, ram: String, temp: String, time: String) {
+    let mut map = HashMap::new();
+    map.insert("PiId", String::from("1"));
+    map.insert("Time", time);
+    map.insert("cpu", cpu);
+    map.insert("temp", temp);
+    map.insert("ram", ram);
+    
+    let client = blocking::Client::new();
+    let res = client.post("http://localhost:7071/api/PostPiStats")
+        .json(&map)
+        .send()
+        .unwrap();
+    println!("{:?}", res.status());
+}
+
+fn get_current_time() -> String {
     let result: DateTime<Local> = Local::now();             // Returns local time of type DateTime
     let current_time: String = result.to_string().clone();  // Clones result into a string
     current_time
 }
 
-fn get_program_output(program: &str) -> String{
+fn get_program_output(program: &str) -> String {
     let output = Command::new(program)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -40,15 +54,5 @@ fn get_program_output(program: &str) -> String{
     let result = String::from_utf8_lossy(&output.stdout);   // Convert list of bytes to COW
     let str_result: String = result.to_string().clone();    // Clones result into a string
     str_result
-}
-
-fn parse_cpu_stats(result: &str) -> &str{
-    let cpu = &result[..];
-    cpu
-}
-
-fn parse_ram_stats(result: &str) -> &str{
-    let ram = &result[..];
-    ram
 }
 

@@ -1,3 +1,5 @@
 .vscode/
 
 pi-monitor-runner.code-workspace
+
+stats-collector/target/
