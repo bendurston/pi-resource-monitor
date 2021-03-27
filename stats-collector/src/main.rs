@@ -8,25 +8,27 @@ use reqwest;
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    if args.len() != 4{
-        println!("Program only takes 3 arguments.");
+    if args.len() != 7 {
+        println!("Program takes exactly 6 arguments.");
         process::exit(1);
     }
 
     let pi_id: String = String::from(&args[1]);
     let url: String = String::from(&args[2]);
     let auth: String = String::from(&args[3]);
-    
-    runner(&pi_id, &url, &auth);
+    let cpu_runner = String::from(&args[4]);
+    let ram_runner = String::from(&args[5]);
+    let temp_runner = String::from(&args[6]);
+    runner(&pi_id, &url, &auth, &cpu_runner, &ram_runner, &temp_runner);
 }
 
-fn runner(pi_id: &String, url: &String, auth: &String) {
+fn runner(pi_id: &String, url: &String, auth: &String, cpu_runner: &String, ram_runner: &String, temp_runner: &String) {
     loop {
         {
-            let cpu: String = get_program_output("../stats-collector/utils/cpu_runner.sh");
-            let ram: String = get_program_output("../stats-collector/utils/ram_runner.sh");
-            let temperature: String = get_program_output("../stats-collector/utils/temperature_runner.sh");
-            
+            let cpu: String = get_program_output(cpu_runner);
+            let ram: String = get_program_output(ram_runner);
+            let temperature: String = get_program_output(temp_runner);
+
             let mut map = HashMap::new();
                 map.insert("piId", pi_id);
                 map.insert("cpu", &cpu);
@@ -34,6 +36,7 @@ fn runner(pi_id: &String, url: &String, auth: &String) {
                 map.insert("temp", &temperature);
 
             let result = send_information(&url, &auth, &map);
+            
             if let Err(_e) = result {
                 let twenty_minutes: time::Duration = time::Duration::from_secs(1200);
                 sleep_on_failed_post(twenty_minutes)
