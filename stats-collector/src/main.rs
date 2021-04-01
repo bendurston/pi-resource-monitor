@@ -13,29 +13,29 @@ fn main() {
         process::exit(1);
     }
 
-    let pi_id: String = String::from(&args[1]);
-    let url: String = String::from(&args[2]);
-    let auth: String = String::from(&args[3]);
-    let cpu_runner = String::from(&args[4]);
-    let ram_runner = String::from(&args[5]);
-    let temp_runner = String::from(&args[6]);
+    let pi_id: &str = &args[1];
+    let url: &str = &args[2];
+    let auth: &str = &args[3];
+    let cpu_runner: &str = &args[4];
+    let ram_runner: &str = &args[5];
+    let temp_runner: &str = &args[6];
     runner(&pi_id, &url, &auth, &cpu_runner, &ram_runner, &temp_runner);
 }
 
-fn runner(pi_id: &String, url: &String, auth: &String, cpu_runner: &String, ram_runner: &String, temp_runner: &String) {
+fn runner(pi_id: &str, url: &str, auth: &str, cpu_runner: &str, ram_runner: &str, temp_runner: &str) {
     loop {
         {
-            let cpu: String = get_program_output(cpu_runner);
-            let ram: String = get_program_output(ram_runner);
-            let temperature: String = get_program_output(temp_runner);
+            let cpu: &str = &get_program_output(cpu_runner);
+            let ram: &str = &get_program_output(ram_runner);
+            let temperature: &str = &get_program_output(temp_runner);
 
             let mut map = HashMap::new();
                 map.insert("piId", pi_id);
-                map.insert("cpu", &cpu);
-                map.insert("ram", &ram);
-                map.insert("temp", &temperature);
+                map.insert("cpu", cpu);
+                map.insert("ram", ram);
+                map.insert("temp", temperature);
 
-            let result = send_information(&url, &auth, &map);
+            let result = send_information(url, auth, &map);
             
             if let Err(_e) = result {
                 let twenty_minutes: time::Duration = time::Duration::from_secs(1200);
@@ -47,7 +47,7 @@ fn runner(pi_id: &String, url: &String, auth: &String, cpu_runner: &String, ram_
     }
 }
 
-fn send_information(url: &String, _auth: &String, map: &HashMap<&str, &String>) -> Result<(), reqwest::Error>{
+fn send_information(url: &str, _auth: &str, map: &HashMap<&str, &str>) -> Result<(), reqwest::Error>{
     let client = reqwest::blocking::Client::new();
     let _res = client.post(url)
         .json(&map)
